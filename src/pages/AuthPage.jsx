@@ -1,8 +1,18 @@
+import {
+    GoogleAuthProvider,
+    createUserWithEmailAndPassword,
+    getAuth,
+    signInWithEmailAndPassword,
+    signInWithPopup,
+} from "firebase/auth";
 import {Button, Col, Image, Row, Modal, Form, FormControl} from "react-bootstrap";
-import {useState, useEffect} from 'react';
-import axios from "axios";
-import useLocalStorage from "use-local-storage";
+import {useContext, useState, useEffect} from 'react';
 import {useNavigate} from "react-router-dom";
+import { AuthContext } from "../components/AuthProvider";
+
+// import axios from "axios";
+// import useLocalStorage from "use-local-storage";
+// import { current } from "@reduxjs/toolkit";
 
 export default function AuthPage() {
     const [modalShow, setModalShow] = useState(null);
@@ -11,30 +21,28 @@ export default function AuthPage() {
     const [username, setUserName] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState('');
-
-
-    const [authToken, setAuthToken] = useLocalStorage("authToken", "");
-
-    const loginImage = "https://sig1.co/img-twitter-1";
-    const url = "https://04158105-ba5b-456c-b2b8-8b44449fbfd7-00-3aws21y02db6k.sisko.replit.dev";
-    
     const navigate = useNavigate();
 
+    // const [authToken, setAuthToken] = useLocalStorage("authToken", "");
+
+    const loginImage = "https://sig1.co/img-twitter-1";
+    // const url = "https://04158105-ba5b-456c-b2b8-8b44449fbfd7-00-3aws21y02db6k.sisko.replit.dev";
+    const auth = getAuth();
+    const {currentUser} = useContext(AuthContext);
+   
     useEffect(() => {
-        if(authToken) {
-            navigate("/profile");
-        }
-    }, [authToken, navigate]);
+        if(currentUser) navigate("/profile"); 
+    }, [currentUser, navigate]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setError('');
         try {
-            const res = await axios.post(`${url}/login`, {username, password});
-            if (res.data && res.data.auth === true && res.data.token) {
-                setAuthToken(res.data.token);
-                console.log("Login was successful, token saved");
-            }
+            await signInWithEmailAndPassword(auth,username,password);
+            // if (res.data && res.data.auth === true && res.data.token) {
+            //     setAuthToken(res.data.token);
+            //     console.log("Login was successful, token saved");
+            // }
         } catch (error) {
             setError('Invalid username and password!');
             console.error(error);
@@ -47,15 +55,26 @@ export default function AuthPage() {
         e.preventDefault();
         setError('');
         try {
-            const res = await axios.post(`${url}/signup`, {username, password});
-            console.log(res.data);
-            setModalShow(null)
+            const res = await createUserWithEmailAndPassword(auth,username,password);
+            console.log(res.user);
+            // const res = await axios.post(`${url}/signup`, {username, password});
+            // console.log(res.data);
+            // setModalShow(null)
         } catch (error) {
             setError('Username taken already');
             console.error(error);
         }
     };
 
+    const provider = new GoogleAuthProvider();
+    const handleGoogleLogin = async(e) => {
+        e.preventDefault();
+        try {
+            await signInWithPopup(auth,provider);
+        } catch (error) {
+            console.error(error);
+        }
+    }
 
     return (
         <Row>
@@ -69,7 +88,7 @@ export default function AuthPage() {
                 <h2 className="my-5" style={{fontSize: 31}}> Join Twitter Today.  </h2>
             
                 <Col sm={5} className="d-grid gap-2">
-                    <Button className="rounded-pill" variant="outline-dark">
+                    <Button className="rounded-pill" variant="outline-dark" onClick={handleGoogleLogin}>
                         <i className="bi bi-google"></i> Sign up with Google
                     </Button>
                     <Button className="rounded-pill" variant="outline-dark">

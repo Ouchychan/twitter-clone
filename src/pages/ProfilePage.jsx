@@ -1,25 +1,42 @@
 import { Navbar, Container, Button, Card,Row } from "react-bootstrap";
-import { useEffect, useState } from "react";
+import { useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import useLocalStorage from "use-local-storage";
 import ProfileSideBar from "../components/ProfileSideBar";
 import ProfileMidBody from "../components/ProfileMidBody";
+import {getAuth} from "firebase/auth";
+import { AuthContext } from "../components/AuthProvider";
+import { current } from "@reduxjs/toolkit";
+
+
 
 export default function ProfilePage() {
-    const [authToken, setAuthToken] = useLocalStorage("authToken", "");
-    const [profilePic, setProfilePic] = useLocalStorage("profilePic", "");
-    const [bio, setBio] = useLocalStorage("bio", "No bio yet.");
-    const navigate = useNavigate();
+    // const [authToken, setAuthToken] = useLocalStorage("authToken", "");
+    // const [profilePic, setProfilePic] = useLocalStorage("profilePic", "");
+    // const [bio, setBio] = useLocalStorage("bio", "No bio yet.");
+    // const navigate = useNavigate();
 
-    useEffect(() => {
-        if (!authToken) {
-            navigate("/login");
-        }
-    }, [authToken, navigate]);
+    const auth = getAuth();
+    const navigate = useNavigate();
+    const {currentUser} = useContext(AuthContext);
+
+    if (!currentUser) {
+        navigate("/login");
+    }
 
     const handleLogout = () => {
-        setAuthToken("");
+        auth.signOut();
     };
+
+    // useEffect(() => {
+    //     if (!authToken) {
+    //         navigate("/login");
+    //     }
+    // }, [authToken, navigate]);
+
+    // const handleLogout = () => {
+    //     setAuthToken("");
+    // };
 
     return (
         <>
